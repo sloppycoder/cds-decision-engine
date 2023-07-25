@@ -1,0 +1,4 @@
+
+app:
+#  decision-table-xls: eligibility_rules.xlsx
+  decision-table-xls: a.xlsx
