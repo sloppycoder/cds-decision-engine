@@ -1,14 +1,15 @@
-package net.vino9.demo.decisionengine;
+package net.vino9.demo.decisionengine.service;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import net.vino9.demo.decisionengine.models.Account;
+import net.vino9.demo.decisionengine.models.Customer;
+import net.vino9.demo.decisionengine.models.Decision;
 import org.drools.core.event.DebugAgendaEventListener;
 import org.drools.core.event.DebugRuleRuntimeEventListener;
 import org.drools.decisiontable.DecisionTableProviderImpl;
 import org.kie.api.KieServices;
-import org.kie.api.builder.KieFileSystem;
-import org.kie.api.builder.KieRepository;
-import org.kie.api.builder.ReleaseId;
+import org.kie.api.builder.*;
 import org.kie.api.io.Resource;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,18 +34,29 @@ public class DecisionService {
 
     private KieContainer kContainer;
 
-    public Customer getDecision(Customer input) {
+    public Decision getDecision(Customer customer, List<Account> accounts) {
+        Decision newDecision = new Decision();
+
         KieSession ksession = this.kContainer.newKieSession();
         if (log.isDebugEnabled()) {
             ksession.addEventListener(new DebugRuleRuntimeEventListener());
             ksession.addEventListener(new DebugAgendaEventListener());
         }
 
-        ksession.insert(input);
+        ksession.insert(newDecision);
+        if (customer != null) {
+            ksession.insert(customer);
+        }
+
+        // iterate through accounts and insert them into the session
+         for (Account account : accounts) {
+             ksession.insert(account);
+         }
+
         ksession.fireAllRules();
         ksession.dispose();
 
-        return input;
+        return newDecision;
     }
 
     @PostConstruct
@@ -75,9 +88,12 @@ public class DecisionService {
         String drlFilePath = getDrlFileName(drl);
 
         // the path must match the rule set name
-        String packagePath = this.getClass().getPackageName().replace(".", "/");
         KieFileSystem kieFileSystem = kieServices.newKieFileSystem().write("src/main/resources/" + drlFilePath, drl);
-        kieServices.newKieBuilder(kieFileSystem).buildAll();
+        KieBuilder builder = kieServices.newKieBuilder(kieFileSystem).buildAll();
+        if (! builder.getResults().getMessages(Message.Level.ERROR).isEmpty()) {
+            throw new RuntimeException("Cannot build DRL from decision table");
+        }
+
         KieRepository kieRepository = kieServices.getRepository();
         ReleaseId krDefaultReleaseId = kieRepository.getDefaultReleaseId();
         return kieServices.newKieContainer(krDefaultReleaseId);
