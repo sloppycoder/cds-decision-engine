@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -14,11 +15,12 @@ public class DecisionController {
         this.decisionService = decisionService;
     }
 
-    @PostMapping(path = "/decision", consumes = "application/json", produces = "application/json")
-    public Map<String, String> getDecision(@RequestBody InputModel input) {
-        // execute the decision, the result will be in the model
-        decisionService.getDecision(input);
-        Map<String, String> response = Map.of("decision", input.getEligibility());
-        return response;
-    }
+//    @PostMapping(path = "/decision", consumes = "application/json", produces = "application/json")
+//    public Map<String, String> getDecision(@RequestBody InputModel input) {
+//        // execute the decision, the result will be in the model
+//        decisionService.getDecision(input);
+//        HashMap<String, String> response = new HashMap<>();
+//        response.put("decision", input.getEligibility());
+//        return response;
+//    }
 }

@@ -1,4 +1,9 @@
 
 app:
-#  decision-table-xls: eligibility_rules.xlsx
-  decision-table-xls: a.xlsx
+  decision-table-xls: eligibility_rules.xlsx
+
+logging:
+  level:
+    org.drools: DEBUG
+    org.kie: DEBUG
+    net.vino9.demo.decisionengine: DEBUG
